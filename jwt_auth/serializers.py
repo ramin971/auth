@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 
 class UserSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField()
+    email = serializers.EmailField()      # to set as required
     class Meta:
         model = User
         fields = ['id','username','email','password']
@@ -20,9 +20,8 @@ class UserSerializer(serializers.ModelSerializer):
     
     
 class UserUpdateSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField()
     class Meta:
         model = User
         fields = ['id','username','email']
         read_only_fields = ['id',]
-        
+
