@@ -33,11 +33,15 @@ class UserViewSet(ModelViewSet):
 class ChangePassword(CreateAPIView):
     queryset = User.objects.all()
     serializer_class = ChangePasswordSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_serializer_context(self):
         return {'user':self.request.user}
-
-   
-
+    
+    # Change Status_Code of ChangePassword from 201 to 205
+    def create(self, request, *args, **kwargs):
+        result = super().create(request, *args, **kwargs)
+        result.status_code = 205
+        return result
 
     
