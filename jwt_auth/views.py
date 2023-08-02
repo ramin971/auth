@@ -6,9 +6,8 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated,IsAdminUser
+from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
-from django.shortcuts import get_object_or_404
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
@@ -18,6 +17,14 @@ class UserViewSet(ModelViewSet):
         if self.action == 'update':
             return UserUpdateSerializer
         return UserSerializer
+    
+    def get_permissions(self):
+        if self.action == 'update':
+            return [IsAuthenticated()]
+        elif self.action == 'create':
+            return [AllowAny()]
+        else:
+            return [IsAdminUser()]
     
     @action(detail=False , methods=['get','put'],permission_classes=[IsAuthenticated])
     def me(self,request):
