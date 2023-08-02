@@ -1,11 +1,13 @@
 from django.contrib.auth.models import User
-from .serializers import UserSerializer,UserUpdateSerializer,ChangePasswordSerializer
+from .serializers import UserSerializer,UserUpdateSerializer\
+    ,ChangePasswordSerializer,CookieTokenRefreshSerializer
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import CreateAPIView
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated,IsAdminUser
+from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
 from django.shortcuts import get_object_or_404
 
 class UserViewSet(ModelViewSet):
@@ -44,4 +46,21 @@ class ChangePassword(CreateAPIView):
         result.status_code = 205
         return result
 
-    
+class CookieTokenObtainPairView(TokenObtainPairView):
+  def finalize_response(self, request, response, *args, **kwargs):
+    if response.data.get('refresh'):
+        cookie_max_age = 3600 * 24 * 14 # 14 days
+        response.set_cookie('refresh_token', response.data['refresh'], max_age=cookie_max_age, httponly=True )
+        del response.data['refresh']
+    return super().finalize_response(request, response, *args, **kwargs)
+
+class CookieTokenRefreshView(TokenRefreshView):
+
+    # If SimpleJWT ROTATE_REFRESH_TOKENS = True :
+    def finalize_response(self, request, response, *args, **kwargs):
+        if response.data.get('refresh'):
+            cookie_max_age = 3600 * 24 * 14 # 14 days
+            response.set_cookie('refresh_token', response.data['refresh'], max_age=cookie_max_age, httponly=True )
+            del response.data['refresh']
+        return super().finalize_response(request, response, *args, **kwargs)
+    serializer_class = CookieTokenRefreshSerializer

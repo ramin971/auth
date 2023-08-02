@@ -8,6 +8,9 @@ router.register('users',views.UserViewSet)
 urlpatterns = [
     path('',include(router.urls)),
     path('change_password/',views.ChangePassword.as_view()),
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/', views.CookieTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', views.CookieTokenRefreshView.as_view(), name='token_refresh'),
+
 ]

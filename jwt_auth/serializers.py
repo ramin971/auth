@@ -1,6 +1,18 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.password_validation import validate_password 
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.exceptions import InvalidToken
+
+class CookieTokenRefreshSerializer(TokenRefreshSerializer):
+    refresh = None
+    def validate(self, attrs):
+        attrs['refresh'] = self.context['request'].COOKIES.get('refresh_token')
+        if attrs['refresh']:
+            return super().validate(attrs)
+        else:
+            raise InvalidToken('No valid refresh_token found in cookie')
+
 
 class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()      # to set as required
@@ -12,7 +24,6 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_password(self,value):
         validate_password(value)
         return value
-
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
@@ -45,6 +56,7 @@ class ChangePasswordSerializer(serializers.Serializer):
         user.set_password(password)
         user.save()
         return user
+    
 
 
 
