@@ -3,6 +3,11 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password 
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer,TokenObtainPairSerializer
 from rest_framework_simplejwt.exceptions import InvalidToken
+from django.http import HttpResponse
+
+from rest_framework_simplejwt.tokens import AccessToken,RefreshToken
+from rest_framework.response import Response
+
 
 class CookieTokenRefreshSerializer(TokenRefreshSerializer):
     refresh = None
@@ -25,10 +30,9 @@ class UserSerializer(serializers.ModelSerializer):
         validate_password(value)
         return value
 
-    def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
-    
+    # def create(self, validated_data):
+    #     user = User.objects.create_user(**validated_data)
+    #     return user
     
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:

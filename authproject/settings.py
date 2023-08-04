@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
 
-    'jwt_auth',
+    'jwt_auth.apps.JwtAuthConfig',
 ]
 
 REST_FRAMEWORK = {
