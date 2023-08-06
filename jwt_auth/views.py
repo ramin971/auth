@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from .serializers import UserSerializer,UserUpdateSerializer\
     ,ChangePasswordSerializer,CookieTokenRefreshSerializer
+from .permissions import CreateOrIsAdmin
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView,ListCreateAPIView
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
@@ -10,62 +11,45 @@ from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
-
-
+from rest_framework.pagination import PageNumberPagination
 
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
-    # permission_classes =[IsAdminUser]
+    pagination_class = PageNumberPagination
+    permission_classes =[CreateOrIsAdmin]
 
     def get_serializer_class(self):
         if self.action == 'update':
             return UserUpdateSerializer
         return UserSerializer
-    
+    # add page_size to response
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        response.data['page_size'] = str(PageNumberPagination.page_size)
+        return response
+    # create_user / set refresh_cookie / add access_response
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer) # NONE
+
+        # NOT WORK : save user without hashed password 
+        # self.perform_create(serializer) # NONE
+        # user = get_object_or_404(User,pk=serializer.data.get('id'))
         # print('###req.data: ',request.data)
         # print('###serializer.data: ',serializer.data)
-        # user = User.objects.create_user(password=request.data['password'][0],**serializer.data)
-        user = get_object_or_404(User,pk=serializer.data.get('id'))
+        # print('$$$$$req.data$$$$$$$',request.data['password'],type(request.data['password'])) WORKED
+        # print(serializer.validated_data)
+        # print(serializer.validated_data['password'],type(serializer.validated_data['password']))
+        user = User.objects.create_user(password=serializer.validated_data['password'],**serializer.data)
         refresh_token = RefreshToken.for_user(user)
         
         result = {**serializer.data , **{'access':str(refresh_token.access_token)}}
         response = Response(result , status=status.HTTP_201_CREATED)
         cookie_max_age = 3600 * 24 * 14 # 14 days
         response.set_cookie('refresh_token', refresh_token, max_age=cookie_max_age, httponly=True )
-        # response['access'] = str(refresh_token.access_token) #add to head of response
-
         return response
-        
 
-    def get_permissions(self):
-        return [AllowAny()]
-        # if self.request.method == 'GET':
-        #     print('g')
-        #     if self.action == 'list':
-        #         print('l')
-        #         return [AllowAny()]
-        #     elif self.action == 'retrieve':
-        #         print('r')
-        #         return [AllowAny()]
-
-            # return
-        # elif self.request.method == 'PUT':
-            # print('p')
-            # return [IsAuthenticated()]
-        # elif self.request.method == 'POST':
-            # print('c')
-            # return [AllowAny()]
-        # else:
-        #     if self.action == 'list':
-        #         return [IsAdminUser()]
-        #     elif self.action == 'retrieve':
-        #         return [IsAuthenticated()]
-    
     @action(detail=False , methods=['get','put','delete'],permission_classes=[IsAuthenticated])
     def me(self,request):
         user = request.user
@@ -84,6 +68,15 @@ class UserViewSet(ModelViewSet):
         elif request.method == 'DELETE':
             user.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+        
+    # @action(detail=False, methods=['post'],serializer_class=ChangePasswordSerializer)
+    # def change_password(self,request):
+    #     if request.method == 'POST':
+    #         # serializer = ChangePasswordSerializer(data=request.data)
+    #         serializer = self.get_serializer(data=request.data)
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #         return Response(serializer.data,status=status.HTTP_205_RESET_CONTENT)
 
 
 class ChangePassword(CreateAPIView):
