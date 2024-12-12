@@ -1,5 +1,5 @@
 from .serializers import TokenRefreshSerializer,UserCreateSerializer,UserUpdateSerializer\
-                ,ChangePasswordSerializer
+                ,ChangePasswordSerializer,UserSerializer
 from .models import User
 from .permissions import CreateOrIsAdmin
 from .paginations import CustomPagination

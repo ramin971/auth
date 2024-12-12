@@ -36,10 +36,10 @@ class UserCreateSerializer(serializers.ModelSerializer):
     #     return user
 
 # if create customer beside user      ####################
-# class UserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = ['id','username','email']    
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id','username','email']    
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
