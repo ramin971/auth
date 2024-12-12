@@ -1,16 +1,17 @@
 from django.urls import path,include
+from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenVerifyView
 from . import views
-from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
-from rest_framework.routers import DefaultRouter,SimpleRouter
 
-router = SimpleRouter()
-router.register('users',views.UserViewSet)
+router = DefaultRouter()
+router.register(r'users', views.UserViewSet)
+router.register(r'change_password', views.ChangePassword,basename='change_pass')
+
+
 urlpatterns = [
     path('',include(router.urls)),
-    path('change_password/',views.ChangePassword.as_view()),
-    # path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    # path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('token/', views.CookieTokenObtainPairView.as_view()),
-    path('token/refresh/', views.CookieTokenRefreshView.as_view()),
+    path('jwt/create/',views.CustomTokenObtainPairView.as_view(), name="jwt-create"),
+    path('jwt/refresh/',views.CustomTokenRefreshView.as_view(), name="jwt-refresh"),
+    path('jwt/verify/', TokenVerifyView.as_view(), name="jwt-verify"),
 
 ]
